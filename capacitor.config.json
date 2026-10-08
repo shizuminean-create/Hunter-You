@@ -1,5 +1,12 @@
 {
   "appId": "com.d3vn.app",
   "appName": "Hunter You",
-  "webDir": "dist"
+  "webDir": "dist",
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 0,
+      "launchAutoHide": true,
+      "backgroundColor": "#07111f"
+    }
+  }
 }
