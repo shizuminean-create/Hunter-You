@@ -280,6 +280,43 @@ const useC = () => useContext(KonteksTema);
 const NAV = [["beranda", "Beranda"], ["target", "Target"], ["riwayat", "Riwayat"], ["panduan", "Panduan"], ["profil", "Profil"]];
 const TINGKAT = [["Pemula", 0], ["Pemburu", 5], ["Veteran", 15], ["Master Hunter", 30]];
 
+// Penyimpanan lokal: tema, profil, banner, target, dan riwayat tetap ada
+// setelah aplikasi ditutup atau APK direstart.
+const STORAGE_KEY = "mhf2_hunter_helper_data_v1";
+const DATA_AWAL = {
+  tema: "malam",
+  nama: "Hunter",
+  target: [],
+  riwayat: [],
+  fotoProfil: null,
+  banner: null,
+};
+
+function bacaData() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return DATA_AWAL;
+    const data = JSON.parse(raw);
+    return {
+      ...DATA_AWAL,
+      ...data,
+      target: Array.isArray(data.target) ? data.target : [],
+      riwayat: Array.isArray(data.riwayat) ? data.riwayat : [],
+    };
+  } catch {
+    return DATA_AWAL;
+  }
+}
+
+function simpanData(data) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  } catch (e) {
+    // Jika storage penuh/rusak, aplikasi tetap bisa dipakai tanpa crash.
+    console.warn("Data MHF2 tidak dapat disimpan:", e);
+  }
+}
+
 // Potong tengah (cover) lalu perkecil, supaya data gambar tetap ringan.
 function olahGambar(file, lebar, tinggi) {
   return new Promise((ok, gagal) => {
@@ -473,17 +510,18 @@ function Efek({ jenis }) {
 }
 
 export default function MHF2Full() {
-  const [tema, setTema] = useState("malam");
+  const [dataTersimpan] = useState(() => bacaData());
+  const [tema, setTema] = useState(() => TEMA[bacaData().tema] ? bacaData().tema : DATA_AWAL.tema);
   const C = TEMA[tema].c;
   const [layar, setLayar] = useState("beranda");
-  const [nama, setNama] = useState("Hunter");
-  const [target, setTarget] = useState([]);
-  const [riwayat, setRiwayat] = useState([]);
+  const [nama, setNama] = useState(() => dataTersimpan.nama || DATA_AWAL.nama);
+  const [target, setTarget] = useState(() => dataTersimpan.target);
+  const [riwayat, setRiwayat] = useState(() => dataTersimpan.riwayat);
   const [tipe, setTipe] = useState("desa");
   const [bintang, setBintang] = useState(0);
   const [cari, setCari] = useState("");
-  const [fotoProfil, setFotoProfil] = useState(null);
-  const [banner, setBanner] = useState(null);
+  const [fotoProfil, setFotoProfil] = useState(() => dataTersimpan.fotoProfil || null);
+  const [banner, setBanner] = useState(() => dataTersimpan.banner || null);
   const [galat, setGalat] = useState("");
   const [yakinReset, setYakinReset] = useState(false);
   const [bagian, setBagian] = useState("Resep");
@@ -491,6 +529,18 @@ export default function MHF2Full() {
   const refFoto = useRef(null);
 
   const [batas, setBatas] = useState(20);
+
+  // Simpan otomatis setiap kali data profil/progres berubah.
+  useEffect(() => {
+    simpanData({
+      tema,
+      nama,
+      target,
+      riwayat,
+      fotoProfil,
+      banner,
+    });
+  }, [tema, nama, target, riwayat, fotoProfil, banner]);
   useEffect(() => setBatas(20), [tipe, bintang, cari]);
 
   const pilihGambar = useCallback(async (file, jenis) => {
