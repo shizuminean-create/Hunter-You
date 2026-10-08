@@ -529,6 +529,13 @@ export default function MHF2Full() {
   const refFoto = useRef(null);
 
   const [batas, setBatas] = useState(20);
+  const [tampilSplash, setTampilSplash] = useState(true);
+
+  // Splash screen aplikasi: loading benar-benar bergerak, bukan gambar statis.
+  useEffect(() => {
+    const timer = setTimeout(() => setTampilSplash(false), 1800);
+    return () => clearTimeout(timer);
+  }, []);
 
   // Simpan otomatis setiap kali data profil/progres berubah.
   useEffect(() => {
@@ -583,6 +590,32 @@ export default function MHF2Full() {
     <KonteksTema.Provider value={C}>
     <div className="mhf" style={{ background: C.bg, color: C.teks, minHeight: "100vh" }}>
       <style>{CSS_DASAR + gayaFokus(C) + CSS_EFEK}</style>
+      {tampilSplash && (
+        <div style={{
+          position: "fixed", inset: 0, zIndex: 99999, display: "flex",
+          flexDirection: "column", alignItems: "center", justifyContent: "center",
+          background: "linear-gradient(145deg, #020817 0%, #06152d 55%, #020611 100%)",
+          color: "#fff",
+        }}>
+          <img
+            src="/icon-only.png"
+            alt="Hunter You"
+            style={{ width: 132, height: 132, objectFit: "contain", borderRadius: 28, display: "block", boxShadow: "0 0 40px rgba(0,153,255,.22)" }}
+          />
+          <div style={{ fontSize: 32, fontWeight: 800, letterSpacing: "-0.8px", marginTop: 22 }}>Hunter You</div>
+          <div className="hunter-loading-spinner" aria-label="Memuat aplikasi" />
+          <div style={{ color: "#91a4bf", fontSize: 14, marginTop: 10 }}>Memuat...</div>
+          <style>{`
+            @keyframes hunterSpin { to { transform: rotate(360deg); } }
+            .hunter-loading-spinner {
+              width: 38px; height: 38px; margin-top: 28px; border-radius: 50%;
+              border: 4px solid rgba(70,130,190,.22);
+              border-top-color: #159cff; border-right-color: #159cff;
+              animation: hunterSpin .8s linear infinite;
+            }
+          `}</style>
+        </div>
+      )}
       {TEMA[tema].efek && <Efek jenis={TEMA[tema].efek} />}
       <div className="max-w-2xl mx-auto px-4 pt-4" style={{ paddingBottom: "calc(96px + env(safe-area-inset-bottom, 0px))" }}>
         {layar === "beranda" && (
